@@ -9,7 +9,7 @@ function App() {
   const handleScrape = async () => {
     try {
       const res = await axios.post(
-        "http://127.0.0.1:8000/scrape?url=" + url
+        "https://stylesync-design-system-extractor-ai.onrender.com/scrape?url=" + url
       );
       setData(res.data);
 
