@@ -10,7 +10,6 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 app = FastAPI()
 
-# Enable CORS (frontend can call backend)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -26,38 +25,64 @@ def home():
 @app.post("/scrape")
 def scrape(url: str):
     try:
-        # Fix for extra quotes
         url = url.strip('"').strip("'")
 
-        # Request with SSL disabled
         res = requests.get(url, timeout=5, verify=False)
-
         soup = BeautifulSoup(res.text, "html.parser")
 
         colors = set()
+        fonts = set()
 
-        # Extract HEX colors from inline styles
+        # 🔥 Extract colors from inline styles
         for tag in soup.find_all(style=True):
             style = tag.get("style", "")
-            matches = re.findall(r'#[0-9a-fA-F]{3,6}', style)
-            for m in matches:
-                colors.add(m)
 
-        # Fallback if no colors found
+            color_matches = re.findall(r'#[0-9a-fA-F]{3,6}', style)
+            for c in color_matches:
+                colors.add(c)
+
+            font_matches = re.findall(r'font-family:\s*([^;]+);?', style)
+            for f in font_matches:
+                fonts.add(f.strip())
+
+        # 🔥 Extract from <style> tags
+        for style_tag in soup.find_all("style"):
+            css = style_tag.text
+
+            color_matches = re.findall(r'#[0-9a-fA-F]{3,6}', css)
+            for c in color_matches:
+                colors.add(c)
+
+            font_matches = re.findall(r'font-family:\s*([^;]+);?', css)
+            for f in font_matches:
+                fonts.add(f.strip())
+
+        # 🔥 Fallbacks
         if not colors:
-            colors = {"#000000", "#ffffff", "#007bff"}
+            colors = {"#000000", "#ffffff", "#2563eb"}
+
+        if not fonts:
+            fonts = {"Arial", "Helvetica"}
+
+        # 🔥 Simple spacing heuristic
+        spacing = [4, 8, 16, 24]
 
         return {
-            "colors": list(colors)[:5],
-            "fonts": ["Arial", "Helvetica"],
-            "spacing": [4, 8, 16]
+            "colors": list(colors)[:6],
+            "fonts": {
+                "heading": list(fonts)[0],
+                "body": list(fonts)[-1]
+            },
+            "spacing": spacing
         }
 
     except Exception as e:
         return {
             "error": str(e),
-            "colors": ["#000000", "#ffffff", "#ff5733"],
-            "fonts": ["Arial"],
+            "colors": ["#000000", "#ffffff", "#2563eb"],
+            "fonts": {
+                "heading": "Arial",
+                "body": "Helvetica"
+            },
             "spacing": [4, 8, 16]
         }
-    

@@ -5,6 +5,7 @@ function App() {
   const [url, setUrl] = useState("");
   const [data, setData] = useState(null);
   const [primaryColor, setPrimaryColor] = useState("#000000");
+  const [locked, setLocked] = useState(false);
 
   const handleScrape = async () => {
     try {
@@ -22,39 +23,41 @@ function App() {
     }
   };
 
+  // 🔥 CSS VARIABLES SYSTEM
+  const cssVars = {
+    "--primary": primaryColor,
+  };
+
   return (
     <div
       style={{
         display: "flex",
         height: "100vh",
         fontFamily: "Arial",
+        ...cssVars,
       }}
     >
       {/* LEFT PANEL */}
       <div
         style={{
           width: "300px",
-          background: "#ffffff",
           padding: "20px",
+          background: "#fff",
           borderRight: "1px solid #e5e7eb",
-          boxShadow: "2px 0 10px rgba(0,0,0,0.05)",
         }}
       >
-        <h2 style={{ marginBottom: "20px", fontWeight: "600" }}>
-          StyleSync AI
-        </h2>
+        <h2>StyleSync AI</h2>
 
         <input
-          type="text"
-          placeholder="Enter URL"
           value={url}
           onChange={(e) => setUrl(e.target.value)}
+          placeholder="Enter URL"
           style={{
             width: "100%",
             padding: "10px",
             marginBottom: "10px",
-            border: "1px solid #d1d5db",
             borderRadius: "6px",
+            border: "1px solid #ccc",
           }}
         />
 
@@ -65,73 +68,66 @@ function App() {
             padding: "10px",
             background: "#111827",
             color: "#fff",
-            border: "none",
             borderRadius: "6px",
-            cursor: "pointer",
-            transition: "all 0.2s ease",
           }}
         >
           Analyze
         </button>
 
+        {/* LOCK */}
+        <button onClick={() => setLocked(!locked)} style={{ marginTop: "10px" }}>
+          {locked ? "🔒 Locked" : "🔓 Unlock"}
+        </button>
+
         {/* COLORS */}
         {data && (
-          <div style={{ marginTop: "20px" }}>
-            <h3 style={{ marginBottom: "10px" }}>Colors</h3>
-
-            <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-              {data.colors.map((color, index) => (
+          <>
+            <h3>Colors</h3>
+            {data.colors.map((color, i) => (
+              <div key={i}>
                 <div
-                  key={index}
+                  onClick={() => setPrimaryColor(color)}
                   style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    padding: "10px",
-                    borderRadius: "10px",
+                    height: "30px",
+                    background: color,
+                    cursor: "pointer",
                     border:
                       primaryColor === color
-                        ? "2px solid #2563eb"
-                        : "1px solid #ddd",
-                    background: "#fafafa",
-                    boxShadow: "0 2px 5px rgba(0,0,0,0.05)",
+                        ? "2px solid var(--primary)"
+                        : "1px solid #ccc",
                   }}
-                >
-                  {/* Color Preview */}
-                  <div
-                    onClick={() => setPrimaryColor(color)}
-                    style={{
-                      width: "40px",
-                      height: "40px",
-                      borderRadius: "8px",
-                      backgroundColor: color,
-                      border: "1px solid #ccc",
-                      cursor: "pointer",
-                    }}
-                  ></div>
+                />
+                <input
+                  type="color"
+                  value={color}
+                  onChange={(e) => {
+                    if (locked) return;
 
-                  {/* Hex */}
-                  <span style={{ fontSize: "14px" }}>{color}</span>
+                    const newColors = [...data.colors];
+                    newColors[i] = e.target.value;
+                    setData({ ...data, colors: newColors });
 
-                  {/* Picker */}
-                  <input
-                    type="color"
-                    value={color}
-                    style={{ cursor: "pointer" }}
-                    onChange={(e) => {
-                      const newColors = [...data.colors];
-                      newColors[index] = e.target.value;
-                      setData({ ...data, colors: newColors });
+                    if (primaryColor === color) {
+                      setPrimaryColor(e.target.value);
+                    }
+                  }}
+                />
+              </div>
+            ))}
 
-                      if (primaryColor === color) {
-                        setPrimaryColor(e.target.value);
-                      }
-                    }}
-                  />
-                </div>
-              ))}
-            </div>
-          </div>
+            {/* TYPOGRAPHY */}
+            <h3>Typography</h3>
+            <p>
+              <b>Heading:</b> {data.fonts.heading}
+            </p>
+            <p>
+              <b>Body:</b> {data.fonts.body}
+            </p>
+
+            {/* SPACING */}
+            <h3>Spacing</h3>
+            <p>{data.spacing.join(", ")}</p>
+          </>
         )}
       </div>
 
@@ -141,50 +137,62 @@ function App() {
           flex: 1,
           padding: "40px",
           background: "#f1f5f9",
-          borderLeft: "1px solid #e5e7eb",
         }}
       >
-        <h2 style={{ marginBottom: "20px" }}>Live Preview</h2>
+        <h2>Component Preview</h2>
 
-        {/* Button */}
-        <button
-          style={{
-            backgroundColor: primaryColor,
-            color: "#fff",
-            padding: "10px 20px",
-            border: "none",
-            borderRadius: "6px",
-            marginBottom: "20px",
-            transition: "all 0.2s ease",
-          }}
-        >
-          Primary Button
-        </button>
+        {data && (
+          <div style={{ display: "grid", gap: "20px" }}>
+            {/* Buttons */}
+            <div>
+              <h4>Buttons</h4>
+              <button
+                style={{
+                  background: "var(--primary)",
+                  color: "#fff",
+                  padding: "10px",
+                }}
+              >
+                Primary
+              </button>
 
-        {/* Card */}
-        <div
-          style={{
-            background: "#ffffff",
-            padding: "20px",
-            borderRadius: "12px",
-            width: "300px",
-            marginBottom: "20px",
-            boxShadow: "0 8px 25px rgba(0,0,0,0.08)",
-          }}
-        >
-          <h3 style={{ color: primaryColor }}>Card Title</h3>
-          <p>This is a preview component.</p>
-        </div>
+              <button
+                style={{
+                  border: "2px solid var(--primary)",
+                  marginLeft: "10px",
+                  padding: "10px",
+                }}
+              >
+                Secondary
+              </button>
+            </div>
 
-        {/* Input */}
-        <input
-          placeholder="Type here..."
-          style={{
-            padding: "10px",
-            border: `2px solid ${primaryColor}`,
-            borderRadius: "5px",
-          }}
-        />
+            {/* Inputs */}
+            <div>
+              <h4>Inputs</h4>
+              <input
+                style={{
+                  border: "2px solid var(--primary)",
+                  padding: "10px",
+                }}
+              />
+            </div>
+
+            {/* Cards */}
+            <div style={{ background: "#fff", padding: "20px" }}>
+              <h3 style={{ color: "var(--primary)" }}>Card Title</h3>
+              <p>Example content</p>
+            </div>
+
+            {/* Typography */}
+            <div style={{ fontFamily: data.fonts.body }}>
+              <h1 style={{ fontFamily: data.fonts.heading }}>
+                Heading Example
+              </h1>
+              <p>Body text example</p>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
